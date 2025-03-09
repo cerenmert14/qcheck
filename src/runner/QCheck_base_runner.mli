@@ -47,6 +47,8 @@ val set_seed : int -> unit
 val set_verbose : bool -> unit
 (** Change the value of [verbose ()] *)
 
+val set_json : bool -> unit
+
 val set_long_tests : bool -> unit
 (** Change the value of [long_tests ()] *)
 
@@ -102,8 +104,8 @@ val debug_shrinking_choices:
 
 val run_tests :
   ?handler:handler_gen ->
-  ?colors:bool -> ?verbose:bool -> ?long:bool ->
-  ?debug_shrink:(out_channel option) ->
+  ?colors:bool -> ?verbose:bool -> ?json:bool ->
+  ?long:bool -> ?debug_shrink:(out_channel option) ->
   ?debug_shrink_list:(string list) ->
   ?out:out_channel -> ?rand:Random.State.t ->
   QCheck2.Test.t list -> int
@@ -112,6 +114,7 @@ val run_tests :
     @return an error code, [0] if all tests passed, [1] otherwise.
     @param colors if true (default), colorful output
     @param verbose if true, prints more information about test cases (default: [false])
+    @param json
     @param long if true, runs the long versions of the tests (default: [false])
     @param debug_shrink [debug_shrink:(Some ch)] writes a log of successful shrink
     attempts to channel [ch], for example [~debug_shrink:(Some (open_out "mylog.txt"))].
@@ -121,6 +124,7 @@ val run_tests :
     Requires [~debug_shrink] to be [Some ch].
     @param out print output to the provided channel (default: [stdout])
     @param rand start the test runner in the provided RNG state *)
+   
 
 val run_tests_main : ?argv:string array -> QCheck2.Test.t list -> 'a
 (** Can be used as the main function of a test file. Exits with a non-0 code
@@ -213,8 +217,9 @@ module Raw : sig
 
   type cli_args = {
     cli_verbose : bool;
+    cli_json : bool;
     cli_long_tests : bool;
-    cli_print_list : bool;
+    cli_print_list : bool; 
     cli_rand : Random.State.t;
     cli_slow_test : int; (* how many slow tests to display? *)
     cli_colors: bool;

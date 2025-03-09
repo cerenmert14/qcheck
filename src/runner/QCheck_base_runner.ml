@@ -96,6 +96,10 @@ let verbose, set_verbose =
   let r = ref false in
   (fun () -> !r), (fun b -> r := b)
 
+let json, set_json =
+  let r = ref false in
+  (fun () -> !r), (fun b -> r := b)
+
 let long_tests, set_long_tests =
   let r = ref false in
   (fun () -> !r), (fun b -> r := b)
@@ -117,6 +121,7 @@ module Raw = struct
 
   type cli_args = {
     cli_verbose : bool;
+    cli_json : bool;
     cli_long_tests : bool;
     cli_print_list : bool;
     cli_rand : Random.State.t;
@@ -166,6 +171,7 @@ module Raw = struct
     let print_list = ref false in
     let set_verbose () = set_verbose true in
     let set_long_tests () = set_long_tests true in
+    let set_json () = set_json true in
     let set_backtraces () = Printexc.record_backtrace true in
     let set_list () = print_list := true in
     let colors = ref true in
@@ -173,6 +179,7 @@ module Raw = struct
     let options = Arg.align (
         [ "-v", Arg.Unit set_verbose, " "
         ; "--verbose", Arg.Unit set_verbose, " enable verbose tests"
+        ; "--json", Arg.Unit set_json, " enable json output"
         ; "--colors", Arg.Set colors, " colored output"
         ; "--no-colors", Arg.Clear colors, " disable colored output"
         ] @
@@ -192,9 +199,10 @@ module Raw = struct
       ) in
     Arg.parse_argv argv options (fun _ ->()) "run QCheck test suite";
     let cli_rand = setup_random_state_ ~colors:!colors () in
-    { cli_verbose=verbose(); cli_long_tests=long_tests(); cli_rand;
-      cli_print_list= !print_list; cli_slow_test= !slow;
-      cli_colors= !colors; cli_debug_shrink = debug_shrink();
+    { cli_verbose=verbose(); cli_long_tests=long_tests(); 
+      cli_json=json(); cli_rand; cli_print_list= !print_list; 
+      cli_slow_test= !slow; cli_colors= !colors;
+      cli_debug_shrink = debug_shrink();
       cli_debug_shrink_list = debug_shrink_list(); }
 end
 
@@ -228,6 +236,16 @@ let pp_counter ~size out c =
   Printf.fprintf out "%*d %*d %*d %*d / %*d %7.1fs"
     size c.gen size c.errored size c.failed
     size c.passed size c.expected t
+
+let jp_counter ~size out c =
+  let t = Unix.gettimeofday () -. c.start in
+  Printf.fprintf out " \"generated\": %*d, \"error\": %*d, \"failed\": %*d, \"passed\": %*d,  \"total\": %*d,  \"time\": \"%7.1fs,\" "
+    size c.gen
+    size c.errored
+    size c.failed
+    size c.passed
+    size c.expected 
+    t
 
 let debug_shrinking_counter_example cell out x =
   match QCheck2.Test.get_print_opt cell  with
@@ -285,6 +303,7 @@ let default_handler
   in
   { handler; }
 
+
 let step ~colors ~size ~out ~verbose c name _ _ r =
   let aux = function
     | QCheck2.Test.Success -> c.passed <- c.passed + 1
@@ -301,18 +320,27 @@ let step ~colors ~size ~out ~verbose c name _ _ r =
       (if colors then Color.reset_line else "\n") (pp_counter ~size) c name
   )
 
-let callback ~size ~out ~verbose ~colors c name cell r =
+let json_file = open_out_gen [Open_creat; Open_append] 0o666 "tyche_res.json"
+
+let callback ~size ~out ~verbose ~json ~colors c name cell r =
   let pass =
     if QCheck2.Test.get_positive cell
     then QCheck2.TestResult.is_success r
     else QCheck2.TestResult.is_failed r in
   let color = if pass then `Green else `Red in
-  if verbose then (
+  if json then (
+    Printf.fprintf json_file "{ \"type\": \"test_case\", %s %a, \"name\": \"%s\" } \n"
+      (if pass then "\"foundbug\": false," else "\"foundbug\": true,")
+      (jp_counter ~size) c
+      name;
+  )
+  else if verbose then (
     Printf.fprintf out "%s[%a] %a %s\n%!"
       (if colors then Color.reset_line else "\n")
       (Color.pp_str_c ~bold:true ~colors color) (if pass then "✓" else "✗")
       (pp_counter ~size) c name
   )
+  
 
 let print_inst cell x =
   match QCheck2.Test.get_print_opt cell with
@@ -393,7 +421,7 @@ let print_error ~colors out cell c_ex exn bt =
 
 let run_tests
     ?(handler=default_handler)
-    ?(colors=true) ?(verbose=verbose()) ?(long=long_tests())
+    ?(colors=true) ?(verbose=verbose()) ?(json=json()) ?(long=long_tests())
     ?(debug_shrink=debug_shrink()) ?(debug_shrink_list=debug_shrink_list())
     ?(out=stdout) ?rand l =
   let rand = match rand with Some x -> x | None -> random_state_ ~colors () in
@@ -402,7 +430,7 @@ let run_tests
   let pp_color = Color.pp_str_c ~bold:true ~colors in
   let size = List.fold_left (fun acc (T.Test cell) ->
       max acc (expect_size long cell)) 4 l in
-  if verbose then
+  if verbose then 
     Printf.fprintf out
       "%*s %*s %*s %*s / %*s     time test name\n%!"
       (size + 4) "generated" size "error"
@@ -423,7 +451,7 @@ let run_tests
         ~handler:(handler ~colors ~debug_shrink ~debug_shrink_list
                     ~size ~out ~verbose c).handler
         ~step:(step ~colors ~size ~out ~verbose c)
-        ~call:(callback ~size ~out ~verbose ~colors c)
+        ~call:(callback ~size ~out ~verbose ~json ~colors c)
         cell
     in
     Res (cell, r)
@@ -470,12 +498,19 @@ let run_tests
 
 let run_tests_main ?(argv=Sys.argv) l =
   try
+    let clear_file = open_out "tyche_res.json" in close_out clear_file;
     let cli_args = parse_cli ~full_options:false argv in
-    exit
+    let exit_c = 
       (run_tests l
          ~colors:cli_args.cli_colors
          ~verbose:cli_args.cli_verbose
-         ~long:cli_args.cli_long_tests ~out:stdout ~rand:cli_args.cli_rand)
+         ~json:cli_args.cli_json
+         ~long:cli_args.cli_long_tests 
+         ~out:stdout 
+         ~rand:cli_args.cli_rand
+      ) in
+      close_out json_file;
+      exit exit_c
   with
     | Arg.Bad msg -> print_endline msg; exit 1
     | Arg.Help msg -> print_endline msg; exit 0

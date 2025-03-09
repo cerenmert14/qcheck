@@ -1,0 +1,19 @@
+{ "type": "test_case", "foundbug": false,  "generated":  100, "error":    0, "failed":    0, "passed":  100,  "total":  100,  "time": "    0.0s," , "name": "list_rev_is_involutive" } 
+{ "type": "test_case", "foundbug": true,  "generated":    1, "error":    0, "failed":    1, "passed":    0,  "total":   10,  "time": "    0.0s," , "name": "should_fail_sort_id" } 
+{ "type": "test_case", "foundbug": true,  "generated":    1, "error":    1, "failed":    0, "passed":    0,  "total":   10,  "time": "    0.0s," , "name": "should_error_raise_exn" } 
+{ "type": "test_case", "foundbug": false,  "generated":  100, "error":    0, "failed":    0, "passed":  100,  "total":  100,  "time": "    0.0s," , "name": "collect_results" } 
+{ "type": "test_case", "foundbug": false,  "generated":  100, "error":    0, "failed":    0, "passed":  100,  "total":  100,  "time": "    0.0s," , "name": "with_stats" } 
+{ "type": "test_case", "foundbug": false,  "generated":    2, "error":    0, "failed":    1, "passed":    1,  "total":  100,  "time": "    0.0s," , "name": "neg test pass (failing as expected)" } 
+{ "type": "test_case", "foundbug": true,  "generated":  100, "error":    0, "failed":    0, "passed":  100,  "total":  100,  "time": "    0.0s," , "name": "neg test unexpected success" } 
+{ "type": "test_case", "foundbug": true,  "generated":    1, "error":    1, "failed":    0, "passed":    0,  "total":  100,  "time": "    0.0s," , "name": "neg fail with error" } 
+{ "type": "test_case", "foundbug": true,  "generated":    1, "error":    0, "failed":    1, "passed":    0,  "total":  100,  "time": "    0.0s," , "name": "FAIL_pred_map_commute" } 
+{ "type": "test_case", "foundbug": true,  "generated":    2, "error":    0, "failed":    1, "passed":    1,  "total":  100,  "time": "    0.0s," , "name": "FAIL_fun2_pred_strings" } 
+{ "type": "test_case", "foundbug": true,  "generated":    1, "error":    0, "failed":    1, "passed":    0,  "total": 1000,  "time": "    0.0s," , "name": "fold_left fold_right" } 
+{ "type": "test_case", "foundbug": true,  "generated":    1, "error":    0, "failed":    1, "passed":    0,  "total": 1000,  "time": "    0.0s," , "name": "fold_left fold_right uncurried" } 
+{ "type": "test_case", "foundbug": true,  "generated":    1, "error":    0, "failed":    1, "passed":    0,  "total":  100,  "time": "    0.1s," , "name": "long_shrink" } 
+{ "type": "test_case", "foundbug": false,  "generated":  100, "error":    0, "failed":    0, "passed":  100,  "total":  100,  "time": "    0.0s," , "name": "find_example" } 
+{ "type": "test_case", "foundbug": true,  "generated":    2, "error":    0, "failed":    1, "passed":    1,  "total": 1000,  "time": "    0.0s," , "name": "mod3_should_fail" } 
+{ "type": "test_case", "foundbug": false,  "generated": 5000, "error":    0, "failed":    0, "passed": 5000,  "total": 5000,  "time": "    0.0s," , "name": "stats_neg" } 
+{ "type": "test_case", "foundbug": false,  "generated": 2200, "error":    0, "failed":    0, "passed":   12,  "total": 2000,  "time": "    0.0s," , "name": "WARN_unlikely_precond" } 
+{ "type": "test_case", "foundbug": true,  "generated": 2200, "error":    0, "failed":    0, "passed":   12,  "total": 2000,  "time": "    0.0s," , "name": "FAIL_unlikely_precond" } 
+{ "type": "test_case", "foundbug": false,  "generated": 1000, "error":    0, "failed":    0, "passed": 1000,  "total": 1000,  "time": "    0.0s," , "name": "tree_rev_is_involutive" } 
