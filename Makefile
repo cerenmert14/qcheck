@@ -25,6 +25,9 @@ example-runner:
 example-alcotest:
 	@dune exec example/alcotest/QCheck_alcotest_test.exe
 
+example-tyche-test:
+	@dune exec example/tyche/QCheck_tyche_test.exe -- -v --json
+
 VERSION=$(shell awk '/^version:/ {print $$2}' qcheck.opam)
 
 update_next_tag:

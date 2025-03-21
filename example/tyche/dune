@@ -1,0 +1,21 @@
+
+(executable
+ (name QCheck_tyche_test)
+ (libraries qcheck-core qcheck-tyche))
+
+(rule
+ (targets QCheck_tyche_test.output)
+ (deps ./QCheck_tyche_test.exe)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (with-accepted-exit-codes 1
+   (setenv CI false ; Don't run tests as if Alcotest was run in CI
+    (setenv QCHECK_SEED 1234
+     (with-stdout-to %{targets}
+      (run ./run_alcotest.sh --color=never)))))))
+
+(rule
+ (alias runtest)
+ (package qcheck-alcotest)
+ (enabled_if (= %{os_type} "Unix"))
+ (action (diff QCheck_alcotest_test.expected QCheck_alcotest_test.output)))
