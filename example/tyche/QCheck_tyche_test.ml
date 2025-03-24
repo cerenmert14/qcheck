@@ -141,7 +141,7 @@ let long_shrink =
   let listgen = QCheck2.Gen.list_size (QCheck2.Gen.int_range 1000 10000) QCheck2.Gen.int in
   QCheck2.(Test.make ~name:"long_shrink"
             (Gen.pair listgen listgen)
-            (fun (xs,ys) -> List.rev (xs@ys) = (List.rev xs)@(List.rev ys)))
+          (fun (xs,ys) -> List.rev (xs@ys) = (List.rev xs)@(List.rev ys)))
 
 let find_ex =
   let open QCheck in
