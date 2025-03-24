@@ -309,11 +309,9 @@ let step ~colors ~size ~out ~verbose c name _ _ r =
   )
 let json_file = open_out_gen [Open_creat; Open_append] 0o666 "tyche_res.json"
 
-(* let tyche_collect cell = 
-  let collect_res = match QCheck2.Test.get_collect_opt cell with
+let tyche_collect cell input = match QCheck2.Test.get_collect_opt cell with
   | None -> ""
-  | Some res -> QCheck2.Test.print_collect res in
-  Printf.fprintf stdout "Collect result: %s" collect_res *)
+  | Some collect_fun -> collect_fun input
 
 let tyche_step ~json c name cell input r =
   let aux = function
@@ -330,9 +328,12 @@ let tyche_step ~json c name cell input r =
       | QCheck2.Test.Failure -> "failed"
       | QCheck2.Test.FalseAssumption -> "failed"
       | QCheck2.Test.Error _ -> "failed" in   
-    (* tyche_collect cell; *)
-    Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f,  \"representation\": \"%s\", \"features\":{}, \"arguments\":{}, \"how_generated\": \"\", \"timing\":{}, \"metadata\":{}, \"coverage\":{} }\n"
-      name status c.start (String.escaped (QCheck2.Test.print_instance cell input))
+    let collect_res = tyche_collect cell input in
+    match collect_res with
+    | "" -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"features\":{}, \"arguments\":{}, \"how_generated\": \"\", \"timing\":{}, \"metadata\":{}, \"coverage\":{} }\n"
+    name status c.start (String.escaped (QCheck2.Test.print_instance cell input))
+    | _ -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"features\":{\"size\": %s}, \"arguments\":{}, \"how_generated\": \"\", \"timing\":{}, \"metadata\":{}, \"coverage\":{} }\n"
+      name status c.start (String.escaped (QCheck2.Test.print_instance cell input)) collect_res
   )
   
 
