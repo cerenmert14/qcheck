@@ -313,6 +313,19 @@ let tyche_collect cell input = match QCheck2.Test.get_collect_opt cell with
   | None -> ""
   | Some collect_fun -> collect_fun input
 
+let tyche_features cell input = match QCheck2.Test.get_features_opt cell with
+  | None -> ""
+  | Some features -> let features_lst = List.fold_left (fun acc (name, func) -> (name, (func input)) :: acc) [] features in
+                      let rec features_format lst = match lst with
+                        | [] -> ""
+                        | (feature_name, feature_res) :: rst -> let rest_res = features_format rst in
+                                                                let single_res = "\"" ^ feature_name ^ "\":" ^ "\"" ^ feature_res ^ "\"" in
+                                                                if (String.length rest_res) <> 0 then
+                                                                   single_res ^ ", " ^ rest_res 
+                                                                else
+                                                                  single_res
+                      in features_format features_lst
+
 let tyche_step ~json c name cell input r =
   let aux = function
     | QCheck2.Test.Success -> c.passed <- c.passed + 1
@@ -328,12 +341,13 @@ let tyche_step ~json c name cell input r =
       | QCheck2.Test.Failure -> "failed"
       | QCheck2.Test.FalseAssumption -> "failed"
       | QCheck2.Test.Error _ -> "failed" in   
-    let collect_res = tyche_collect cell input in
-    match collect_res with
+    let features = tyche_features cell input in 
+
+    match features with
     | "" -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"features\":{}, \"arguments\":{}, \"how_generated\": \"\", \"timing\":{}, \"metadata\":{}, \"coverage\":{} }\n"
     name status c.start (String.escaped (QCheck2.Test.print_instance cell input))
-    | _ -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"features\":{\"size\": %s}, \"arguments\":{}, \"how_generated\": \"\", \"timing\":{}, \"metadata\":{}, \"coverage\":{} }\n"
-      name status c.start (String.escaped (QCheck2.Test.print_instance cell input)) collect_res
+    | _ -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"features\":{%s}, \"arguments\":{}, \"how_generated\": \"\", \"timing\":{}, \"metadata\":{}, \"coverage\":{} }\n"
+      name status c.start (String.escaped (QCheck2.Test.print_instance cell input)) features
   )
   
 

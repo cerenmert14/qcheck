@@ -1,10 +1,13 @@
 
 let size l = string_of_int (List.length l)
+
+let tst l = string_of_int (List.length l) 
 let passing =
   QCheck2.(Test.make ~count:100
             ~name:"list_rev_is_involutive"
             ~print:Print.(list int)
             ~collect:size
+            ~features: [("size", size); ("idk", tst)]
             Gen.(list int)
             (fun l -> List.rev (List.rev l) = l))
 let failing =

@@ -11,3 +11,4 @@ man
 *.byte
 .merlin
 _opam/
+tyche_res.json

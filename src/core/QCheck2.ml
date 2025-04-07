@@ -1555,6 +1555,7 @@ module Test = struct
     gen : 'a Gen.t; (* how to generate/shrink instances *)
     print : 'a Print.t option; (* how to print values *)
     collect : ('a -> string) option; (* collect values by tag, useful to display distribution of generated *)
+    features : ((string * ('a -> string)) list) option; (* tyche_features to collect values to display information*)
     stats : 'a stat list; (* distribution of values of type 'a *)
     qcheck1_shrink : ('a -> ('a -> unit) -> unit) option; (* QCheck1-backward-compatible shrinking *)
     if_assumptions_fail: [`Fatal | `Warning] * float;
@@ -1574,6 +1575,8 @@ module Test = struct
   let get_print_opt {print; _} = print
 
   let get_collect_opt {collect; _} = collect
+
+  let get_features_opt {features; _} = features
 
   let get_stats {stats; _} = stats
 
@@ -1607,7 +1610,7 @@ module Test = struct
 
   let make_cell ?(if_assumptions_fail=default_if_assumptions_fail)
       ?(count) ?long_factor ?(negative=false) ?max_gen
-      ?(max_fail=1) ?(retries=1) ?(name=fresh_name()) ?print ?collect ?(stats=[]) gen law
+      ?(max_fail=1) ?(retries=1) ?(name=fresh_name()) ?print ?collect ?features ?(stats=[]) gen law
     =
     let count = global_count count in
     let long_factor = global_long_factor long_factor in
@@ -1617,6 +1620,7 @@ module Test = struct
       law;
       gen;
       collect;
+      features;
       print;
       stats;
       max_gen;
@@ -1632,7 +1636,7 @@ module Test = struct
 
   let make_cell_from_QCheck1 ?(if_assumptions_fail=default_if_assumptions_fail)
       ?(count) ?long_factor ?(negative=false) ?max_gen
-      ?(max_fail=1) ?(retries=1) ?(name=fresh_name()) ~gen ?shrink ?print ?collect ~stats law
+      ?(max_fail=1) ?(retries=1) ?(name=fresh_name()) ~gen ?shrink ?print ?collect ?features ~stats law
     =
     let count = global_count count in
     let long_factor = global_long_factor long_factor in
@@ -1645,6 +1649,7 @@ module Test = struct
       gen = fake_gen;
       print;
       collect;
+      features;
       stats;
       max_gen;
       max_fail;
@@ -1657,8 +1662,8 @@ module Test = struct
       qcheck1_shrink = shrink;
     }
 
-  let make' ?if_assumptions_fail ?count ?long_factor ?max_gen ?max_fail ?retries ?name ?print ?collect ?stats ~negative arb law =
-    Test (make_cell ?if_assumptions_fail ?count ?long_factor ?max_gen ?max_fail ?retries ?name ?print ?collect ?stats ~negative arb law)
+  let make' ?if_assumptions_fail ?count ?long_factor ?max_gen ?max_fail ?retries ?name ?print ?collect ?features ?stats ~negative arb law =
+    Test (make_cell ?if_assumptions_fail ?count ?long_factor ?max_gen ?max_fail ?retries ?name ?print ?collect ?features ?stats ~negative arb law)
 
   let make = make' ~negative:false
   let make_neg = make' ~negative:true

@@ -1758,9 +1758,8 @@ module Test : sig
   val make_cell :
     ?if_assumptions_fail:([`Fatal | `Warning] * float) ->
     ?count:int -> ?long_factor:int ->  ?negative:bool -> ?max_gen:int -> ?max_fail:int -> ?retries:int ->
-    ?name:string -> ?print:'a Print.t -> ?collect:('a -> string) -> ?stats:('a stat list) ->
-     'a Gen.t -> ('a -> bool) ->
-    'a cell
+    ?name:string -> ?print:'a Print.t -> ?collect:('a -> string) -> ?features:((string * ('a -> string)) list) -> 
+    ?stats:('a stat list) -> 'a Gen.t -> ('a -> bool) ->'a cell
   (** [make_cell gen prop] builds a test that checks property [prop] on instances
       of the generator [gen].
       @param name the name of the test.
@@ -1784,6 +1783,7 @@ module Test : sig
         (since 0.10)
       @param print used in {!Print} to display generated values failing the [prop]
       @param collect (* collect values by tag, useful to display distribution of generated *)
+      @param features
       @param stats on a distribution of values of type 'a
   *)
 
@@ -1791,7 +1791,7 @@ module Test : sig
     ?if_assumptions_fail:([`Fatal | `Warning] * float) ->
     ?count:int -> ?long_factor:int -> ?negative:bool -> ?max_gen:int -> ?max_fail:int ->
     ?retries:int -> ?name:string -> gen:(Random.State.t -> 'a) -> ?shrink:('a -> ('a -> unit) -> unit) ->
-    ?print:('a -> string) -> ?collect:('a -> string) -> stats:'a stat list -> ('a -> bool) ->
+    ?print:('a -> string) -> ?collect:('a -> string) -> ?features:((string * ('a -> string)) list) -> stats:'a stat list -> ('a -> bool) ->
     'a cell
   (** ⚠️ Do not use, this is exposed for internal reasons only. ⚠️
 
@@ -1803,6 +1803,7 @@ module Test : sig
   val get_gen : 'a cell -> 'a Gen.t
   val get_print_opt : 'a cell -> ('a Print.t) option
   val get_collect_opt : 'a cell -> ('a -> string) option
+  val get_features_opt : 'a cell -> (string * ('a -> string)) list option
   val get_stats : 'a cell -> ('a stat list)
   val set_name : _ cell -> string -> unit
 
@@ -1824,8 +1825,8 @@ module Test : sig
   val make :
     ?if_assumptions_fail:([`Fatal | `Warning] * float) ->
     ?count:int -> ?long_factor:int -> ?max_gen:int -> ?max_fail:int -> ?retries:int ->
-    ?name:string -> ?print:('a Print.t) -> ?collect:('a -> string) -> ?stats:('a stat list) ->
-    'a Gen.t -> ('a -> bool) -> t
+    ?name:string -> ?print:('a Print.t) -> ?collect:('a -> string) -> ?features:((string * ('a -> string)) list) ->
+    ?stats:('a stat list) -> 'a Gen.t -> ('a -> bool) -> t
   (** [make gen prop] builds a test that checks property [prop] on instances
       of the generator [gen].
       See {!make_cell} for a description of the parameters.
@@ -1834,8 +1835,8 @@ module Test : sig
   val make_neg :
     ?if_assumptions_fail:([`Fatal | `Warning] * float) ->
     ?count:int -> ?long_factor:int -> ?max_gen:int -> ?max_fail:int -> ?retries:int ->
-    ?name:string -> ?print:('a Print.t) -> ?collect:('a -> string) -> ?stats:('a stat list) ->
-    'a Gen.t -> ('a -> bool) -> t
+    ?name:string -> ?print:('a Print.t) -> ?collect:('a -> string) -> ?features:((string * ('a -> string)) list) -> 
+    ?stats:('a stat list) -> 'a Gen.t -> ('a -> bool) -> t
   (** [make_neg gen prop] builds a test that checks property [prop] on instances
       of the generator [gen].
       The test is considered negative, meaning that it is expected not to satisfy the tested property.
