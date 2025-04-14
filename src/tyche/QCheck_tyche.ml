@@ -309,23 +309,28 @@ let step ~colors ~size ~out ~verbose c name _ _ r =
   )
 let json_file = open_out_gen [Open_creat; Open_append] 0o666 "tyche_res.json"
 
+type features_type = String of string | Int of int | Float of float
+
 let tyche_collect cell input = match QCheck2.Test.get_collect_opt cell with
   | None -> ""
   | Some collect_fun -> collect_fun input
 
 let tyche_features cell input = match QCheck2.Test.get_features_opt cell with
-  | None -> ""
-  | Some features -> let features_lst = List.fold_left (fun acc (name, func) -> (name, (func input)) :: acc) [] features in
-                      let rec features_format lst = match lst with
-                        | [] -> ""
-                        | (feature_name, feature_res) :: rst -> let rest_res = features_format rst in
-                                                                let single_res = "\"" ^ feature_name ^ "\":" ^ "\"" ^ feature_res ^ "\"" in
-                                                                if (String.length rest_res) <> 0 then
-                                                                   single_res ^ ", " ^ rest_res 
-                                                                else
-                                                                  single_res
-                      in features_format features_lst
-
+  | None -> []
+  | Some features -> List.fold_left (fun acc (name, func) -> (name, (func input)) :: acc) [] features
+                     
+let rec print_features lst = match lst with
+| [] -> Printf.fprintf json_file "} }\n"
+| (name, res) :: rst -> match rst with
+                        | [] -> (match res with 
+                                  |  QCheck2.Test.String s -> Printf.fprintf json_file "\"%s\": \"%s\"} }\n" name s
+                                  |  QCheck2.Test.Int i -> Printf.fprintf json_file "\"%s\": %d} }\n" name i
+                                  |  QCheck2.Test.Float f ->  Printf.fprintf json_file "\"%s\": %f} }\n" name f)
+                        | _ -> (match res with 
+                                  |  QCheck2.Test.String s -> Printf.fprintf json_file "\"%s\": \"%s\", " name s ; print_features rst
+                                  |  QCheck2.Test.Int i -> Printf.fprintf json_file "\"%s\": %d, " name i ; print_features rst
+                                  |  QCheck2.Test.Float f ->  Printf.fprintf json_file "\"%s\": %f, " name f ; print_features rst)                  
+  
 let tyche_step ~json c name cell input r =
   let aux = function
     | QCheck2.Test.Success -> c.passed <- c.passed + 1
@@ -342,12 +347,12 @@ let tyche_step ~json c name cell input r =
       | QCheck2.Test.FalseAssumption -> "failed"
       | QCheck2.Test.Error _ -> "failed" in   
     let features = tyche_features cell input in 
-
     match features with
-    | "" -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"features\":{}, \"arguments\":{}, \"how_generated\": \"\", \"timing\":{}, \"metadata\":{}, \"coverage\":{} }\n"
+    | [] -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"features\":{}, \"arguments\":{}, \"how_generated\": \"\", \"timing\":{}, \"metadata\":{}, \"coverage\":{} }\n"
     name status c.start (String.escaped (QCheck2.Test.print_instance cell input))
-    | _ -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"features\":{%s}, \"arguments\":{}, \"how_generated\": \"\", \"timing\":{}, \"metadata\":{}, \"coverage\":{} }\n"
-      name status c.start (String.escaped (QCheck2.Test.print_instance cell input)) features
+    | _ -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"arguments\":{}, \"how_generated\": \"\", \"timing\":{}, \"metadata\":{}, \"coverage\":{}, \"features\":{"
+      name status c.start (String.escaped (QCheck2.Test.print_instance cell input)) ;
+      print_features features
   )
   
 

@@ -1751,6 +1751,8 @@ module Test : sig
       - {!QCheck_ounit} to convert to OUnit framework
   *)
 
+  type features_type = String of string | Int of int | Float of float
+
   type 'a cell
   (** A single property test on a value of type ['a]. A {!Test.t} wraps a [cell]
       and hides its type parameter. *)
@@ -1758,7 +1760,7 @@ module Test : sig
   val make_cell :
     ?if_assumptions_fail:([`Fatal | `Warning] * float) ->
     ?count:int -> ?long_factor:int ->  ?negative:bool -> ?max_gen:int -> ?max_fail:int -> ?retries:int ->
-    ?name:string -> ?print:'a Print.t -> ?collect:('a -> string) -> ?features:((string * ('a -> string)) list) -> 
+    ?name:string -> ?print:'a Print.t -> ?collect:('a -> string) -> ?features:((string * ('a -> features_type)) list) -> 
     ?stats:('a stat list) -> 'a Gen.t -> ('a -> bool) ->'a cell
   (** [make_cell gen prop] builds a test that checks property [prop] on instances
       of the generator [gen].
@@ -1791,7 +1793,7 @@ module Test : sig
     ?if_assumptions_fail:([`Fatal | `Warning] * float) ->
     ?count:int -> ?long_factor:int -> ?negative:bool -> ?max_gen:int -> ?max_fail:int ->
     ?retries:int -> ?name:string -> gen:(Random.State.t -> 'a) -> ?shrink:('a -> ('a -> unit) -> unit) ->
-    ?print:('a -> string) -> ?collect:('a -> string) -> ?features:((string * ('a -> string)) list) -> stats:'a stat list -> ('a -> bool) ->
+    ?print:('a -> string) -> ?collect:('a -> string) -> ?features:((string * ('a -> features_type)) list) -> stats:'a stat list -> ('a -> bool) ->
     'a cell
   (** ⚠️ Do not use, this is exposed for internal reasons only. ⚠️
 
@@ -1803,7 +1805,7 @@ module Test : sig
   val get_gen : 'a cell -> 'a Gen.t
   val get_print_opt : 'a cell -> ('a Print.t) option
   val get_collect_opt : 'a cell -> ('a -> string) option
-  val get_features_opt : 'a cell -> (string * ('a -> string)) list option
+  val get_features_opt : 'a cell -> (string * ('a -> features_type)) list option
   val get_stats : 'a cell -> ('a stat list)
   val set_name : _ cell -> string -> unit
 
@@ -1825,7 +1827,7 @@ module Test : sig
   val make :
     ?if_assumptions_fail:([`Fatal | `Warning] * float) ->
     ?count:int -> ?long_factor:int -> ?max_gen:int -> ?max_fail:int -> ?retries:int ->
-    ?name:string -> ?print:('a Print.t) -> ?collect:('a -> string) -> ?features:((string * ('a -> string)) list) ->
+    ?name:string -> ?print:('a Print.t) -> ?collect:('a -> string) -> ?features:((string * ('a -> features_type)) list) ->
     ?stats:('a stat list) -> 'a Gen.t -> ('a -> bool) -> t
   (** [make gen prop] builds a test that checks property [prop] on instances
       of the generator [gen].
@@ -1835,7 +1837,7 @@ module Test : sig
   val make_neg :
     ?if_assumptions_fail:([`Fatal | `Warning] * float) ->
     ?count:int -> ?long_factor:int -> ?max_gen:int -> ?max_fail:int -> ?retries:int ->
-    ?name:string -> ?print:('a Print.t) -> ?collect:('a -> string) -> ?features:((string * ('a -> string)) list) -> 
+    ?name:string -> ?print:('a Print.t) -> ?collect:('a -> string) -> ?features:((string * ('a -> features_type)) list) -> 
     ?stats:('a stat list) -> 'a Gen.t -> ('a -> bool) -> t
   (** [make_neg gen prop] builds a test that checks property [prop] on instances
       of the generator [gen].

@@ -1,12 +1,13 @@
 
-let size l = string_of_int (List.length l)
 
-let tst l = string_of_int (List.length l) 
+let size l = QCheck2.Test.Int (List.length l)
+
+let tst l = QCheck2.Test.Float (float_of_int (List.length l))
+
 let passing =
   QCheck2.(Test.make ~count:100
             ~name:"list_rev_is_involutive"
             ~print:Print.(list int)
-            ~collect:size
             ~features: [("size", size); ("idk", tst)]
             Gen.(list int)
             (fun l -> List.rev (List.rev l) = l))
@@ -14,7 +15,6 @@ let failing =
   QCheck2.(Test.make ~count:10
             ~name:"should_fail_sort_id"
             ~print:Print.(list int)
-            ~collect:size
             Gen.(list int)
     (fun l -> l = List.sort compare l))
 

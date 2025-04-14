@@ -1544,6 +1544,8 @@ end
 
 module Test = struct
 
+  type features_type = String of string | Int of int | Float of float
+
   type 'a cell = {
     count : int; (* number of tests to do *)
     long_factor : int; (* multiplicative factor for long test count *)
@@ -1555,7 +1557,7 @@ module Test = struct
     gen : 'a Gen.t; (* how to generate/shrink instances *)
     print : 'a Print.t option; (* how to print values *)
     collect : ('a -> string) option; (* collect values by tag, useful to display distribution of generated *)
-    features : ((string * ('a -> string)) list) option; (* tyche_features to collect values to display information*)
+    features : ((string * ('a -> features_type)) list) option; (* tyche_features to collect values to display information*)
     stats : 'a stat list; (* distribution of values of type 'a *)
     qcheck1_shrink : ('a -> ('a -> unit) -> unit) option; (* QCheck1-backward-compatible shrinking *)
     if_assumptions_fail: [`Fatal | `Warning] * float;
