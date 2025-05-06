@@ -1,14 +1,11 @@
+let size_int l = QCheck2.Test.Int (List.length l)
 
-
-let size l = QCheck2.Test.Int (List.length l)
-
-let tst l = QCheck2.Test.Float (float_of_int (List.length l))
-
+let size_float l = QCheck2.Test.Float (float_of_int (List.length l))
 let passing =
   QCheck2.(Test.make ~count:100
             ~name:"list_rev_is_involutive"
             ~print:Print.(list int)
-            ~features: [("size", size); ("idk", tst)]
+            ~features: [("size_int", size_int); ("size_float", size_float)]
             Gen.(list int)
             (fun l -> List.rev (List.rev l) = l))
 let failing =

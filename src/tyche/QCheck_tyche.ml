@@ -311,10 +311,6 @@ let json_file = open_out_gen [Open_creat; Open_append] 0o666 "tyche_res.json"
 
 type features_type = String of string | Int of int | Float of float
 
-let tyche_collect cell input = match QCheck2.Test.get_collect_opt cell with
-  | None -> ""
-  | Some collect_fun -> collect_fun input
-
 let tyche_features cell input = match QCheck2.Test.get_features_opt cell with
   | None -> []
   | Some features -> List.fold_left (fun acc (name, func) -> (name, (func input)) :: acc) [] features
@@ -522,7 +518,6 @@ if fail = 0 && error = 0 then (
     (pp_color `Red) "failure" fail error total;
   1
 )
-
 
 let run_tests_main ?(argv=Sys.argv) l =
   try
