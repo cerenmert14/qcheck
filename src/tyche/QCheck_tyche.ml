@@ -307,7 +307,7 @@ let step ~colors ~size ~out ~verbose c name _ _ r =
     Printf.fprintf out "%s[ ] %a %s%!"
       (if colors then Color.reset_line else "\n") (pp_counter ~size) c name
   )
-let json_file = open_out_gen [Open_creat; Open_append] 0o666 "tyche_res.json"
+let json_file = open_out_gen [Open_creat; Open_append] 0o666 "tyche-log.jsonl"
 
 type features_type = String of string | Int of int | Float of float
 
@@ -521,7 +521,7 @@ if fail = 0 && error = 0 then (
 
 let run_tests_main ?(argv=Sys.argv) l =
   try
-    let clear_file = open_out "tyche_res.json" in close_out clear_file;
+    let clear_file = open_out "tyche-log.jsonl" in close_out clear_file;
     let cli_args = parse_cli ~full_options:false argv in
     let exit_c = 
       (run_tests l
