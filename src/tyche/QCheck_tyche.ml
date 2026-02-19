@@ -345,9 +345,9 @@ let tyche_step ~json c name cell input r =
       | QCheck2.Test.Error _ -> "failed" in   
     let features = tyche_features cell input in 
     match features with
-    | [] -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"features\":{}, \"arguments\":{}, \"how_generated\": \"\", \"timing\":{\"time\": %3.1f}, \"metadata\":{}, \"coverage\":{} }\n"
+    | [] -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"features\":{}, \"arguments\":{}, \"how_generated\": \"\", \"timing\":{\"time\": %3.9f}, \"metadata\":{}, \"coverage\":{} }\n"
     name status c.start (String.escaped (QCheck2.Test.print_instance cell input)) (end_time -. c.start)
-    | _ -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"arguments\":{}, \"how_generated\": \"\", \"timing\":{\"time\": %3.1f}, \"metadata\":{}, \"coverage\":{}, \"features\":{"
+    | _ -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"arguments\":{}, \"how_generated\": \"\", \"timing\":{\"time\": %3.9f}, \"metadata\":{}, \"coverage\":{}, \"features\":{"
       name status c.start (String.escaped (QCheck2.Test.print_instance cell input)) (end_time -. c.start) ;
       print_features features
   )
