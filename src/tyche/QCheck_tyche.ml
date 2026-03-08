@@ -327,7 +327,7 @@ let rec print_features lst = match lst with
                                   |  QCheck2.Test.Int i -> Printf.fprintf json_file "\"%s\": %d, " name i ; print_features rst
                                   |  QCheck2.Test.Float f ->  Printf.fprintf json_file "\"%s\": %f, " name f ; print_features rst)                  
   
-let tyche_step ~json c name cell input r =
+let tyche_step ~json c name cell input r duration =
   let aux = function
     | QCheck2.Test.Success -> c.passed <- c.passed + 1
     | QCheck2.Test.Failure -> c.failed <- c.failed + 1
@@ -336,7 +336,6 @@ let tyche_step ~json c name cell input r =
   in
   c.gen <- c.gen + 1;
   aux r;
-  let end_time = Unix.gettimeofday () in
   if json then (
     let status = match r with
       | QCheck2.Test.Success -> "passed"
@@ -346,9 +345,9 @@ let tyche_step ~json c name cell input r =
     let features = tyche_features cell input in 
     match features with
     | [] -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"features\":{}, \"arguments\":{}, \"how_generated\": \"\", \"timing\":{\"time\": %3.9f}, \"metadata\":{}, \"coverage\":{} }\n"
-    name status c.start (String.escaped (QCheck2.Test.print_instance cell input)) (end_time -. c.start)
+    name status c.start (String.escaped (QCheck2.Test.print_instance cell input)) duration
     | _ -> Printf.fprintf json_file "{ \"type\": \"test_case\", \"property\": \"%s\", \"status\": \"%s\", \"status_reason\": \"\", \"run_start\": %3.1f, \"representation\": \"%s\", \"arguments\":{}, \"how_generated\": \"\", \"timing\":{\"time\": %3.9f}, \"metadata\":{}, \"coverage\":{}, \"features\":{"
-      name status c.start (String.escaped (QCheck2.Test.print_instance cell input)) (end_time -. c.start) ;
+      name status c.start (String.escaped (QCheck2.Test.print_instance cell input)) duration;
       print_features features
   )
   
@@ -471,10 +470,17 @@ let aux_map (T.Test cell) =
     Printf.fprintf out "%s[ ] %a %s%!"
       (if colors then Color.reset_line else "")
       (pp_counter ~size) c (T.get_name cell);
+  let last_time = ref (Unix.gettimeofday ()) in
+  let step_with_timing name cell input r =
+    let now = Unix.gettimeofday () in
+    let duration = now -. !last_time in
+    last_time := now;
+    tyche_step ~json c name cell input r duration
+  in
   let r = QCheck2.Test.check_cell ~long ~rand
       ~handler:(handler ~colors ~debug_shrink ~debug_shrink_list
                   ~size ~out ~verbose c).handler
-      ~step:(tyche_step ~json c)
+      ~step: step_with_timing
       ~call:(callback ~size ~out ~verbose ~colors c)
       cell
   in
